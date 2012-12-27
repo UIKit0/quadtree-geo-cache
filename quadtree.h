@@ -5,12 +5,12 @@
 
 #include <stdint.h>
 
-typedef struct quadtree_bucket quadtree_bucket_t;
-typedef struct quadtree_node quadtree_node_t;
+struct quadtree;
+struct quadtree_node;
 
-quadtree_node_t* quadtree_create(uint32_t, uint32_t, uint32_t, uint32_t);
-void quadtree_insert(quadtree_node_t*, void*, uint32_t, uint32_t);
-void quadtree_debug(quadtree_node_t*);
-void quadtree_query(quadtree_node_t*, uint32_t, uint32_t);
+struct quadtree_node* quadtree_create(uint32_t, uint32_t, uint32_t, uint32_t);
+void quadtree_insert(struct quadtree_node*, void*, uint32_t, uint32_t);
+void quadtree_debug(struct quadtree_node*);
+void quadtree_query(struct quadtree_node*, uint32_t, uint32_t);
 
 #endif

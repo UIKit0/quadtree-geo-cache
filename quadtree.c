@@ -9,7 +9,7 @@
 /**
  * Linked List used for node buckets. Uses 24 bytes-per-node
  */
-struct quadtree_bucket {
+typedef struct quadtree_bucket {
 
 	// Linked List Reqs
 	struct quadtree_bucket* next;
@@ -22,15 +22,15 @@ struct quadtree_bucket {
 	// Excess bits
 	uint32_t _excess_bits : 12;
 
-};
+} quadtree_bucket_t;
 
 /**
  * Node used to represent a region of the quadtree. Uses 56 bytes-per-node
  */
-struct quadtree_node {
+typedef struct quadtree_node {
 
 	// If this is a leaf node, it points to the object used for data storage
-	quadtree_bucket_t* bucket_ptr;
+	struct quadtree_bucket* bucket_ptr;
 
 	// Lat-Lng bits and delta bits : Total 128 - 104 = Excess 24
 	uint32_t lat				: 26;
@@ -62,7 +62,7 @@ struct quadtree_node {
 	 */
 
 	struct quadtree_node* children[4];
-};
+} quadtree_node_t;
 
 // Prototypes
 static void quadtree_insert_bucket(quadtree_node_t*, quadtree_bucket_t*);
