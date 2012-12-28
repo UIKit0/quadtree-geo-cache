@@ -14,7 +14,7 @@ int main(int argc, char* argv[]) {
 	srand(time(NULL));
 
 	int idx, ubound = TREE_BOUNDS*2;
-	struct quadtree_node* quadtree_ptr = quadtree_create(TREE_BOUNDS, TREE_BOUNDS, TREE_BOUNDS, TREE_BOUNDS);
+	struct quadtree* quadtree_ptr = quadtree_create(TREE_BOUNDS, TREE_BOUNDS, TREE_BOUNDS, TREE_BOUNDS);
 	for(idx = 0; idx < ITERATIONS; ++idx) {
 		quadtree_insert(quadtree_ptr, NULL, rand()%(ubound+1), rand()%(ubound+1));
 	}

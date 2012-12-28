@@ -6,6 +6,18 @@
 
 #include "./quadtree.h"
 
+// Forward Declarations
+struct quadtree;
+struct quadtree_node;
+struct quadtree_bucket;
+
+/**
+ * Client facing handle for the quadtree
+ */
+typedef struct quadtree {
+	struct quadtree_node* root_node_ptr;
+} quadtree_t;
+
 /**
  * Linked List used for node buckets. Uses 24 bytes-per-node
  */
@@ -65,15 +77,16 @@ typedef struct quadtree_node {
 } quadtree_node_t;
 
 // Prototypes
+static quadtree_node_t* quadtree_root_create(uint32_t, uint32_t, uint32_t, uint32_t);
 static void quadtree_insert_bucket(quadtree_node_t*, quadtree_bucket_t*);
 static void quadtree_subdivide(quadtree_node_t* node_ptr);
-static void initialize_quadtree_node(quadtree_node_t*);
+static void quadtree_node_init(quadtree_node_t*);
 static quadtree_node_t* find_leaf_by_lat_lng(quadtree_node_t*, uint32_t, uint32_t);
 
 // Function Definitions
 ////////////////////////////////////////////////////////////////////////////////
 
-void initialize_quadtree_node(quadtree_node_t* node_ptr) {
+void quadtree_node_init(quadtree_node_t* node_ptr) {
 
 	// Init the deltas and the centers
 	node_ptr->lat = node_ptr->lng = 0;
@@ -93,11 +106,11 @@ void initialize_quadtree_node(quadtree_node_t* node_ptr) {
 	node_ptr->_excess_bits = 0;
 }
 
-quadtree_node_t* quadtree_create(uint32_t lat, uint32_t lng, uint32_t delta_lat, uint32_t delta_lng) {
-	
-	// Allocate the new quadtree pointer
+quadtree_node_t* quadtree_root_create(uint32_t lat, uint32_t lng, uint32_t delta_lat, uint32_t delta_lng) {
+
+	// Create and init the node
 	quadtree_node_t* node_ptr = malloc(sizeof(quadtree_node_t));
-	initialize_quadtree_node(node_ptr);
+	quadtree_node_init(node_ptr);
 
 	// Set the default var vals
 	node_ptr->lat = lat;
@@ -106,6 +119,14 @@ quadtree_node_t* quadtree_create(uint32_t lat, uint32_t lng, uint32_t delta_lat,
 	node_ptr->delta_lng = delta_lng;
 
 	return node_ptr;
+}
+
+quadtree_t* quadtree_create(uint32_t lat, uint32_t lng, uint32_t delta_lat, uint32_t delta_lng) {
+	
+	// Allocate the new quadtree pointer
+	quadtree_t* quadtree_ptr = malloc(sizeof(quadtree_t));
+	quadtree_ptr->root_node_ptr = quadtree_root_create(lat, lng, delta_lat, delta_lng);
+	return quadtree_ptr;
 }
 
 void quadtree_subdivide(quadtree_node_t* node_ptr) {
@@ -120,10 +141,10 @@ void quadtree_subdivide(quadtree_node_t* node_ptr) {
 	if(delta_lat <= 0 || delta_lng <= 0) { return; }
 
 	// Allocate and assign the new region nodes
-	node_ptr->children[0] = quadtree_create(lat-delta_lat, lng-delta_lng, delta_lat, delta_lng);
-	node_ptr->children[1] = quadtree_create(lat+delta_lat, lng-delta_lng, delta_lat, delta_lng);
-	node_ptr->children[2] = quadtree_create(lat-delta_lat, lng+delta_lng, delta_lat, delta_lng);
-	node_ptr->children[3] = quadtree_create(lat+delta_lat, lng+delta_lng, delta_lat, delta_lng);
+	node_ptr->children[0] = quadtree_root_create(lat-delta_lat, lng-delta_lng, delta_lat, delta_lng);
+	node_ptr->children[1] = quadtree_root_create(lat+delta_lat, lng-delta_lng, delta_lat, delta_lng);
+	node_ptr->children[2] = quadtree_root_create(lat-delta_lat, lng+delta_lng, delta_lat, delta_lng);
+	node_ptr->children[3] = quadtree_root_create(lat+delta_lat, lng+delta_lng, delta_lat, delta_lng);
 	
 	// Update the leaf-node bit
 	node_ptr->is_leaf_node = 0;
@@ -174,10 +195,10 @@ void quadtree_insert_bucket(quadtree_node_t* node_ptr, quadtree_bucket_t* new_bu
 	}
 }
 
-void quadtree_insert(quadtree_node_t* node_ptr, void* data_ptr, uint32_t lat, uint32_t lng) {
+void quadtree_insert(quadtree_t* quadtree_ptr, void* data_ptr, uint32_t lat, uint32_t lng) {
 
 	// Ensure the args are good
-	assert(node_ptr && node_ptr != NULL);
+	assert(quadtree_ptr && quadtree_ptr != NULL);
 
 	// Alloc and init the new bucket node
 	quadtree_bucket_t* new_bucket_ptr = malloc(sizeof(quadtree_bucket_t));
@@ -187,20 +208,28 @@ void quadtree_insert(quadtree_node_t* node_ptr, void* data_ptr, uint32_t lat, ui
 	new_bucket_ptr->next = NULL;
 
 	// Wrapper, since this is used elsewhere
-	quadtree_insert_bucket(node_ptr, new_bucket_ptr);
+	quadtree_insert_bucket(quadtree_ptr->root_node_ptr, new_bucket_ptr);
 }
 
-// Returns all results within a bounding box
-void quadtree_range_query(quadtree_node_t* node_ptr, uint32_t lat, uint32_t lng, uint32_t range) {
-	quadtree_query(node_ptr, lat, lng);
+// Returns all results within a bounding box - EXPENSIVE
+void quadtree_range_query(quadtree_t* quadtree_ptr, uint32_t lat, uint32_t lng, uint32_t range) {
+
+	// If a non-leaf node's center is in the bounding box, add it to the queue
+	// If a leaf node's center is in the bounding box, add it to the result list
+
+	// If the bounds of the result are outside of the bounding box, iterate
+	// through the bucket. Else, add the entire bucket to the result set.
+
+	// XXX - For now, simply fall back to a simple query
+	quadtree_query(quadtree_ptr, lat, lng);
 }
 
 // Returns the leaf node closest to the query params
-void quadtree_query(quadtree_node_t* node_ptr, uint32_t lat, uint32_t lng) {
+void quadtree_query(quadtree_t* quadtree_ptr, uint32_t lat, uint32_t lng) {
 	
+	// Find the single closest node
 	fprintf(stderr, "\nQuery Lat: %u, Query Lng: %u, ", lat, lng);
-
-	node_ptr = find_leaf_by_lat_lng(node_ptr, lat, lng);
+	quadtree_node_t* node_ptr = find_leaf_by_lat_lng(quadtree_ptr->root_node_ptr, lat, lng);
 
 	// Print the node
 	fprintf(stderr, "\nLat: %u, Lng: %u, ", node_ptr->lat, node_ptr->lng);
@@ -209,7 +238,10 @@ void quadtree_query(quadtree_node_t* node_ptr, uint32_t lat, uint32_t lng) {
 }
 
 // Doesn't need to be super efficient | simply used for debuging
-void quadtree_debug(quadtree_node_t* node_ptr) {
+void quadtree_debug(quadtree_t* quadtree_ptr) {
+	
+	// Temp node pointer
+	quadtree_node_t* node_ptr = quadtree_ptr->root_node_ptr;
 
 	// Debug list-queue structure
 	typedef struct { void* next; quadtree_node_t* data; } debug_node_t;
