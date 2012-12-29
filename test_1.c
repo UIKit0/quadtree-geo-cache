@@ -32,11 +32,14 @@ int main(int argc, char* argv[]) {
 		
 		// If there was success, print it
 		if(quadtree_cursor_good(cursor_ptr)) {
+
+			quadtree_query_result_t query_result;
 			fprintf(stderr, "\n# Query Lat: %u, Query Lng: %u\n", qlat, qlng);
-			do {
-				fprintf(stderr, "Result Lat: %u, ", quadtree_cursor_lat(cursor_ptr));
-				fprintf(stderr, "Result Lng: %u\n", quadtree_cursor_lng(cursor_ptr));
-			} while(quadtree_cursor_next(cursor_ptr));
+
+			while(quadtree_cursor_next(cursor_ptr, &query_result)) {
+				fprintf(stderr, "Result Lat: %u, ", query_result.lat);
+				fprintf(stderr, "Result Lng: %u\n", query_result.lng);
+			}
 		}
 
 		// Clean up the cursor
