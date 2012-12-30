@@ -20,7 +20,7 @@ This way, range queries are bounded, quick, and likely to return the closest buc
 
 ### QTDESTROYALL
 **Arguments:** `0:nonce`  
-**Response:** `nonce:0:ERRNO`
+**Response:** `nonce:0:ERRNO`  
 **Note:** Two requests are required to eveict the entire cache. 
 The first sends a nonce of 0 and receices a nonce from the server. 
 The second sends the nonce to the server and receives an OK or FAIL.  
