@@ -1,14 +1,20 @@
 CC=gcc
 FLAGS = -Werror -Wall
 
-all: test_1.o quadtree.o
-	$(CC) $(FLAGS) test_1.o quadtree.o -o test_1
+SRC_DIR=./src
+LIB_DIR=./lib
+BIN_DIR=./bin
+INC_DIR=./include
+TEST_DIR=./test
 
-test_1.o: test_1.c
-	$(CC) $(FLAGS) test_1.c -c
+# All reqs for the quadtree impl itself
+QUAD_TREE_OBJS=$(LIB_DIR)/quadtree.o
 
-quadtree.o: quadtree.c quadtree.h
-	$(CC) $(FLAGS) quadtree.c -c
+all: $(QUAD_TREE_OBJS)
+	@# $(CC) $(FLAGS) $(QUAD_TREE_OBJS) -o $(BIN_DIR)/quadtree
+
+$(LIB_DIR)/quadtree.o: $(SRC_DIR)/quadtree.c $(INC_DIR)/quadtree.h
+	$(CC) $(FLAGS) $(SRC_DIR)/quadtree.c -c -o $(LIB_DIR)/quadtree.o
 	
 clean:
-	rm -rf *.o test_1
+	rm -rf lib/*.o bin/*

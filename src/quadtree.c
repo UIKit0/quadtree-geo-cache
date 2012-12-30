@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <assert.h>
 
-#include "./quadtree.h"
+#include "../include/quadtree.h"
 
 // Forward Declarations
 struct quadtree_node;
